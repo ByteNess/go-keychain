@@ -5,7 +5,7 @@ package test
 import (
 	"testing"
 
-	"github.com/keybase/go-keychain"
+	"github.com/byteness/go-keychain"
 )
 
 func TestAccess(t *testing.T) {

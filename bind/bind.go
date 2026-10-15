@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/keybase/go-keychain"
+	"github.com/byteness/go-keychain"
 )
 
 type Test interface {

@@ -5,7 +5,7 @@ package test
 import (
 	"testing"
 
-	"github.com/keybase/go-keychain/bind"
+	"github.com/byteness/go-keychain/bind"
 )
 
 type test struct {
