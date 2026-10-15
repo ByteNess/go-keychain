@@ -191,6 +191,21 @@ func (kc Keychain) Status() error {
 	return checkError(C.SecKeychainGetStatus(kref, &status))
 }
 
+// IsLocked reports the keychain's lock state. It never presents UI.
+func (kc Keychain) IsLocked() (bool, error) {
+	kref, err := openKeychainRef(kc.path)
+	if err != nil {
+		return false, err
+	}
+	defer C.CFRelease(C.CFTypeRef(kref))
+
+	var status C.SecKeychainStatus
+	if err := checkError(C.SecKeychainGetStatus(kref, &status)); err != nil {
+		return false, err
+	}
+	return status&C.kSecUnlockStateStatus == 0, nil
+}
+
 // The returned SecKeychainRef, if non-nil, must be released via CFRelease.
 func openKeychainRef(path string) (C.SecKeychainRef, error) {
 	pathName := C.CString(path)
@@ -207,10 +222,10 @@ func openKeychainRef(path string) (C.SecKeychainRef, error) {
 // UnlockAtPath unlocks keychain at path
 func UnlockAtPath(path string, password string) error {
 	kref, err := openKeychainRef(path)
-	defer Release(C.CFTypeRef(kref))
 	if err != nil {
 		return err
 	}
+	defer Release(C.CFTypeRef(kref))
 	passwordRef := C.CString(password)
 	defer C.free(unsafe.Pointer(passwordRef))
 	return checkError(C.SecKeychainUnlock(kref, C.UInt32(len(password)), unsafe.Pointer(passwordRef), C.Boolean(1)))
@@ -219,10 +234,10 @@ func UnlockAtPath(path string, password string) error {
 // LockAtPath locks keychain at path
 func LockAtPath(path string) error {
 	kref, err := openKeychainRef(path)
-	defer Release(C.CFTypeRef(kref))
 	if err != nil {
 		return err
 	}
+	defer Release(C.CFTypeRef(kref))
 	return checkError(C.SecKeychainLock(kref))
 }
 
