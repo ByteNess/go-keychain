@@ -5,7 +5,7 @@ package test
 import (
 	"testing"
 
-	"github.com/keybase/go-keychain"
+	"github.com/byteness/go-keychain"
 )
 
 func TestAccess(t *testing.T) {
@@ -14,7 +14,7 @@ func TestAccess(t *testing.T) {
 	item := keychain.NewGenericPassword("TestAccess", "test2", "A label", []byte("toomanysecrets2"), "")
 	defer keychain.DeleteItem(item)
 
-	trustedApplications := []string{"/Applications/Mail.app"}
+	trustedApplications := []string{"/System/Applications/Mail.app"}
 	item.SetAccess(&keychain.Access{Label: "Mail", TrustedApplications: trustedApplications})
 	err = keychain.AddItem(item)
 	if err != nil {
@@ -42,7 +42,7 @@ func TestGenericPasswordRef(t *testing.T) {
 	ref, err := keychain.QueryItemRef(query)
 	if err != nil {
 		t.Fatal(err)
-	} else if ref == nil {
+	} else if ref == 0 {
 		t.Fatal("Missing result")
 	} else {
 		err = keychain.DeleteItemRef(ref)
