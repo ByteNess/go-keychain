@@ -17,7 +17,7 @@ func TestAccess(t *testing.T) {
 	item := NewGenericPassword(service, account, label, []byte(password), accessGroup)
 	defer func() { _ = DeleteItem(item) }()
 
-	trustedApplications := []string{"/Applications/Mail.app"}
+	trustedApplications := []string{"/System/Applications/Mail.app"}
 	item.SetAccess(&Access{Label: "Mail", TrustedApplications: trustedApplications})
 	err = AddItem(item)
 	if err != nil {
