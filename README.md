@@ -1,3 +1,7 @@
+> [!NOTE]
+> This is a maintained fork of <https://github.com/99designs/go-keychain> which is an abandoned project.
+> Contributions are welcome and preferably please open an [issue](https://github.com/ByteNess/go-keychain/issues) first.
+
 # Go Keychain
 
 A library for accessing the Keychain for OSX and iOS in Go (golang).
