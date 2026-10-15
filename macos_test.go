@@ -230,6 +230,41 @@ func TestStatus(t *testing.T) {
 	}
 }
 
+func TestIsLocked(t *testing.T) {
+	path := tempPath(t)
+	defer func() { _ = os.Remove(path) }()
+	k, newErr := NewKeychain(path, "testkeychainpassword")
+	if newErr != nil {
+		t.Fatal(newErr)
+	}
+
+	assertLocked := func(want bool) {
+		t.Helper()
+		locked, err := k.IsLocked()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if locked != want {
+			t.Fatalf("IsLocked() = %v, want %v", locked, want)
+		}
+	}
+
+	assertLocked(false)
+	if err := LockAtPath(path); err != nil {
+		t.Fatal(err)
+	}
+	assertLocked(true)
+	if err := UnlockAtPath(path, "testkeychainpassword"); err != nil {
+		t.Fatal(err)
+	}
+	assertLocked(false)
+
+	nonexistent := NewWithPath(fmt.Sprintf("this_shouldnt_exist_%s", time.Now()))
+	if _, err := nonexistent.IsLocked(); err != ErrorNoSuchKeychain {
+		t.Fatalf("Expected %v, got %v", ErrorNoSuchKeychain, err)
+	}
+}
+
 func TestGenericPasswordRef(t *testing.T) {
 	service, account, label, accessGroup, password := "TestGenericPasswordRef", "test", "", "", "toomanysecrets"
 
