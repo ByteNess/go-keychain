@@ -1,38 +1,41 @@
-// +build darwin,!ios
+//go:build darwin && !ios
 
 package keychain
 
 /*
 #cgo LDFLAGS: -framework CoreFoundation -framework Security
-#cgo CFLAGS: -w
+#cgo CFLAGS: -Wno-deprecated-declarations
 
+#include <stdlib.h>
+#include <string.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <Security/Security.h>
 */
 import "C"
+
 import (
 	"os"
 	"unsafe"
 )
 
 // AccessibleKey is key for kSecAttrAccessible
-var AccessibleKey = attrKey(C.CFTypeRef(C.kSecAttrAccessible))
-var accessibleTypeRef = map[Accessible]C.CFTypeRef{
-	AccessibleWhenUnlocked:                   C.CFTypeRef(C.kSecAttrAccessibleWhenUnlocked),
-	AccessibleAfterFirstUnlock:               C.CFTypeRef(C.kSecAttrAccessibleAfterFirstUnlock),
-	AccessibleAlways:                         C.CFTypeRef(C.kSecAttrAccessibleAlways),
-	AccessibleWhenUnlockedThisDeviceOnly:     C.CFTypeRef(C.kSecAttrAccessibleWhenUnlockedThisDeviceOnly),
-	AccessibleAfterFirstUnlockThisDeviceOnly: C.CFTypeRef(C.kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly),
-	AccessibleAccessibleAlwaysThisDeviceOnly: C.CFTypeRef(C.kSecAttrAccessibleAlwaysThisDeviceOnly),
-
-	// Only available in 10.10
-	//AccessibleWhenPasscodeSetThisDeviceOnly:  C.CFTypeRef(C.kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly),
-}
-
 var (
-	// AccessKey is key for kSecAttrAccess
-	AccessKey = attrKey(C.CFTypeRef(C.kSecAttrAccess))
+	AccessibleKey     = attrKey(C.CFTypeRef(C.kSecAttrAccessible))
+	accessibleTypeRef = map[Accessible]C.CFTypeRef{
+		AccessibleWhenUnlocked:                   C.CFTypeRef(C.kSecAttrAccessibleWhenUnlocked),
+		AccessibleAfterFirstUnlock:               C.CFTypeRef(C.kSecAttrAccessibleAfterFirstUnlock),
+		AccessibleAlways:                         C.CFTypeRef(C.kSecAttrAccessibleAlways),
+		AccessibleWhenUnlockedThisDeviceOnly:     C.CFTypeRef(C.kSecAttrAccessibleWhenUnlockedThisDeviceOnly),
+		AccessibleAfterFirstUnlockThisDeviceOnly: C.CFTypeRef(C.kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly),
+		AccessibleAccessibleAlwaysThisDeviceOnly: C.CFTypeRef(C.kSecAttrAccessibleAlwaysThisDeviceOnly),
+
+		// Only available in 10.10
+		// AccessibleWhenPasscodeSetThisDeviceOnly:  C.CFTypeRef(C.kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly),
+	}
 )
+
+// AccessKey is key for kSecAttrAccess
+var AccessKey = attrKey(C.CFTypeRef(C.kSecAttrAccess))
 
 // createAccess creates a SecAccessRef as CFTypeRef.
 // The returned SecAccessRef, if non-nil, must be released via CFRelease.
@@ -144,6 +147,12 @@ func NewKeychainWithPrompt(path string) (Keychain, error) {
 	return newKeychain(path, "", true)
 }
 
+// freeSecret zeroes n bytes of a C copy of a secret before freeing it.
+func freeSecret(p *C.char, n int) {
+	C.memset(unsafe.Pointer(p), 0, C.size_t(n))
+	C.free(unsafe.Pointer(p))
+}
+
 func newKeychain(path, password string, promptUser bool) (Keychain, error) {
 	pathRef := C.CString(path)
 	defer C.free(unsafe.Pointer(pathRef))
@@ -155,7 +164,7 @@ func newKeychain(path, password string, promptUser bool) (Keychain, error) {
 		errCode = C.SecKeychainCreate(pathRef, C.UInt32(0), nil, C.Boolean(1), 0, &kref) //nolint
 	} else {
 		passwordRef := C.CString(password)
-		defer C.free(unsafe.Pointer(passwordRef))
+		defer freeSecret(passwordRef, len(password))
 		errCode = C.SecKeychainCreate(pathRef, C.UInt32(len(password)), unsafe.Pointer(passwordRef), C.Boolean(0), 0, &kref) //nolint
 	}
 
@@ -227,7 +236,7 @@ func UnlockAtPath(path string, password string) error {
 	}
 	defer Release(C.CFTypeRef(kref))
 	passwordRef := C.CString(password)
-	defer C.free(unsafe.Pointer(passwordRef))
+	defer freeSecret(passwordRef, len(password))
 	return checkError(C.SecKeychainUnlock(kref, C.UInt32(len(password)), unsafe.Pointer(passwordRef), C.Boolean(1)))
 }
 
@@ -258,7 +267,7 @@ type keychainArray []Keychain
 // Convert the keychainArray to a CFTypeRef.
 // The returned CFTypeRef, if non-nil, must be released via CFRelease.
 func (ka keychainArray) Convert() (C.CFTypeRef, error) {
-	var refs = make([]C.CFTypeRef, len(ka))
+	refs := make([]C.CFTypeRef, len(ka))
 	var err error
 
 	for idx, kc := range ka {

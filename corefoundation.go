@@ -1,4 +1,4 @@
-// +build darwin ios
+//go:build darwin || ios
 
 package keychain
 
@@ -15,9 +15,6 @@ package keychain
 // file from go-kext, which means that any project that depends on this
 // package and go-kext would run into duplicate symbol errors otherwise.
 //
-// TODO: Move this file into its own package depended on by go-kext
-// and this package.
-//
 // The functions are also static, because this package is itself a fork of
 // keybase/go-keychain, which defines the same symbols. A binary that links
 // both (e.g. via azidentity/cache) would otherwise fail with duplicate
@@ -32,6 +29,7 @@ static CFArrayRef CFArrayCreateSafe2(CFAllocatorRef allocator, const uintptr_t *
 }
 */
 import "C"
+
 import (
 	"errors"
 	"fmt"
@@ -260,7 +258,7 @@ func Convert(ref C.CFTypeRef) (interface{}, error) {
 		}
 		return b, nil
 	} else if typeID == C.CFNumberGetTypeID() {
-		return CFNumberToInterface(C.CFNumberRef(ref)), nil
+		return cfNumberToInterface(C.CFNumberRef(ref))
 	} else if typeID == C.CFBooleanGetTypeID() {
 		if C.CFBooleanGetValue(C.CFBooleanRef(ref)) != 0 {
 			return true, nil
@@ -291,74 +289,79 @@ func ConvertCFDictionary(d C.CFDictionaryRef) (map[interface{}]interface{}, erro
 }
 
 // CFNumberToInterface converts the CFNumberRef to the most appropriate numeric
-// type.
-// This code is from github.com/kballard/go-osx-plist.
+// type. It returns nil for a CFNumber type it does not know.
 func CFNumberToInterface(cfNumber C.CFNumberRef) interface{} {
+	v, _ := cfNumberToInterface(cfNumber)
+	return v
+}
+
+// This code is from github.com/kballard/go-osx-plist.
+func cfNumberToInterface(cfNumber C.CFNumberRef) (interface{}, error) {
 	typ := C.CFNumberGetType(cfNumber)
 	switch typ {
 	case C.kCFNumberSInt8Type:
 		var sint C.SInt8
 		C.CFNumberGetValue(cfNumber, typ, unsafe.Pointer(&sint)) //nolint
-		return int8(sint)
+		return int8(sint), nil
 	case C.kCFNumberSInt16Type:
 		var sint C.SInt16
 		C.CFNumberGetValue(cfNumber, typ, unsafe.Pointer(&sint)) //nolint
-		return int16(sint)
+		return int16(sint), nil
 	case C.kCFNumberSInt32Type:
 		var sint C.SInt32
 		C.CFNumberGetValue(cfNumber, typ, unsafe.Pointer(&sint)) //nolint
-		return int32(sint)
+		return int32(sint), nil
 	case C.kCFNumberSInt64Type:
 		var sint C.SInt64
 		C.CFNumberGetValue(cfNumber, typ, unsafe.Pointer(&sint)) //nolint
-		return int64(sint)
+		return int64(sint), nil
 	case C.kCFNumberFloat32Type:
 		var float C.Float32
 		C.CFNumberGetValue(cfNumber, typ, unsafe.Pointer(&float)) //nolint
-		return float32(float)
+		return float32(float), nil
 	case C.kCFNumberFloat64Type:
 		var float C.Float64
 		C.CFNumberGetValue(cfNumber, typ, unsafe.Pointer(&float)) //nolint
-		return float64(float)
+		return float64(float), nil
 	case C.kCFNumberCharType:
 		var char C.char
 		C.CFNumberGetValue(cfNumber, typ, unsafe.Pointer(&char)) //nolint
-		return byte(char)
+		return byte(char), nil
 	case C.kCFNumberShortType:
 		var short C.short
 		C.CFNumberGetValue(cfNumber, typ, unsafe.Pointer(&short)) //nolint
-		return int16(short)
+		return int16(short), nil
 	case C.kCFNumberIntType:
 		var i C.int
 		C.CFNumberGetValue(cfNumber, typ, unsafe.Pointer(&i)) //nolint
-		return int32(i)
+		return int32(i), nil
 	case C.kCFNumberLongType:
 		var long C.long
 		C.CFNumberGetValue(cfNumber, typ, unsafe.Pointer(&long)) //nolint
-		return int(long)
+		return int(long), nil
 	case C.kCFNumberLongLongType:
 		// This is the only type that may actually overflow us
 		var longlong C.longlong
 		C.CFNumberGetValue(cfNumber, typ, unsafe.Pointer(&longlong)) //nolint
-		return int64(longlong)
+		return int64(longlong), nil
 	case C.kCFNumberFloatType:
 		var float C.float
 		C.CFNumberGetValue(cfNumber, typ, unsafe.Pointer(&float)) //nolint
-		return float32(float)
+		return float32(float), nil
 	case C.kCFNumberDoubleType:
 		var double C.double
 		C.CFNumberGetValue(cfNumber, typ, unsafe.Pointer(&double)) //nolint
-		return float64(double)
+		return float64(double), nil
 	case C.kCFNumberCFIndexType:
 		// CFIndex is a long
 		var index C.CFIndex
 		C.CFNumberGetValue(cfNumber, typ, unsafe.Pointer(&index)) //nolint
-		return int(index)
+		return int(index), nil
 	case C.kCFNumberNSIntegerType:
 		// We don't have a definition of NSInteger, but we know it's either an int or a long
 		var nsInt C.long
 		C.CFNumberGetValue(cfNumber, typ, unsafe.Pointer(&nsInt)) //nolint
-		return int(nsInt)
+		return int(nsInt), nil
 	}
-	panic("Unknown CFNumber type")
+	return nil, fmt.Errorf("unknown CFNumber type: %d", typ)
 }

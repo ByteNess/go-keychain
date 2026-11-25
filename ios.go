@@ -1,4 +1,4 @@
-// +build darwin,ios
+//go:build darwin && ios
 
 package keychain
 
@@ -10,13 +10,15 @@ package keychain
 */
 import "C"
 
-var AccessibleKey = attrKey(C.CFTypeRef(C.kSecAttrAccessible))
-var accessibleTypeRef = map[Accessible]C.CFTypeRef{
-	AccessibleWhenUnlocked:                   C.CFTypeRef(C.kSecAttrAccessibleWhenUnlocked),
-	AccessibleAfterFirstUnlock:               C.CFTypeRef(C.kSecAttrAccessibleAfterFirstUnlock),
-	AccessibleAlways:                         C.CFTypeRef(C.kSecAttrAccessibleAlways),
-	AccessibleWhenPasscodeSetThisDeviceOnly:  C.CFTypeRef(C.kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly),
-	AccessibleWhenUnlockedThisDeviceOnly:     C.CFTypeRef(C.kSecAttrAccessibleWhenUnlockedThisDeviceOnly),
-	AccessibleAfterFirstUnlockThisDeviceOnly: C.CFTypeRef(C.kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly),
-	AccessibleAccessibleAlwaysThisDeviceOnly: C.CFTypeRef(C.kSecAttrAccessibleAlwaysThisDeviceOnly),
-}
+var (
+	AccessibleKey     = attrKey(C.CFTypeRef(C.kSecAttrAccessible))
+	accessibleTypeRef = map[Accessible]C.CFTypeRef{
+		AccessibleWhenUnlocked:                   C.CFTypeRef(C.kSecAttrAccessibleWhenUnlocked),
+		AccessibleAfterFirstUnlock:               C.CFTypeRef(C.kSecAttrAccessibleAfterFirstUnlock),
+		AccessibleAlways:                         C.CFTypeRef(C.kSecAttrAccessibleAlways),
+		AccessibleWhenPasscodeSetThisDeviceOnly:  C.CFTypeRef(C.kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly),
+		AccessibleWhenUnlockedThisDeviceOnly:     C.CFTypeRef(C.kSecAttrAccessibleWhenUnlockedThisDeviceOnly),
+		AccessibleAfterFirstUnlockThisDeviceOnly: C.CFTypeRef(C.kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly),
+		AccessibleAccessibleAlwaysThisDeviceOnly: C.CFTypeRef(C.kSecAttrAccessibleAlwaysThisDeviceOnly),
+	}
+)

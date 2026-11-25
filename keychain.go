@@ -1,4 +1,4 @@
-// +build darwin
+//go:build darwin
 
 package keychain
 
@@ -13,6 +13,7 @@ package keychain
 #include <Security/Security.h>
 */
 import "C"
+
 import (
 	"fmt"
 	"time"
@@ -42,8 +43,30 @@ var (
 	ErrorDecode = Error(C.errSecDecode)
 	// ErrorNoSuchKeychain corresponds to errSecNoSuchKeychain result code
 	ErrorNoSuchKeychain = Error(C.errSecNoSuchKeychain)
-	// ErrorNoAcccessForItem corresponds to errSecNoAccessForItem result code
+	// ErrorNoAccessForItem corresponds to errSecNoAccessForItem result code
 	ErrorNoAccessForItem = Error(C.errSecNoAccessForItem)
+	// ErrorReadOnly corresponds to errSecReadOnly result code
+	ErrorReadOnly = Error(C.errSecReadOnly)
+	// ErrorInvalidKeychain corresponds to errSecInvalidKeychain result code
+	ErrorInvalidKeychain = Error(C.errSecInvalidKeychain)
+	// ErrorDuplicateKeyChain corresponds to errSecDuplicateKeychain result code
+	ErrorDuplicateKeyChain = Error(C.errSecDuplicateKeychain)
+	// ErrorWrongVersion corresponds to errSecWrongSecVersion result code
+	ErrorWrongVersion = Error(C.errSecWrongSecVersion)
+	// ErrorReadonlyAttribute corresponds to errSecReadOnlyAttr result code
+	ErrorReadonlyAttribute = Error(C.errSecReadOnlyAttr)
+	// ErrorInvalidSearchRef corresponds to errSecInvalidSearchRef result code
+	ErrorInvalidSearchRef = Error(C.errSecInvalidSearchRef)
+	// ErrorInvalidItemRef corresponds to errSecInvalidItemRef result code
+	ErrorInvalidItemRef = Error(C.errSecInvalidItemRef)
+	// ErrorDataNotAvailable corresponds to errSecDataNotAvailable result code
+	ErrorDataNotAvailable = Error(C.errSecDataNotAvailable)
+	// ErrorDataNotModifiable corresponds to errSecDataNotModifiable result code
+	ErrorDataNotModifiable = Error(C.errSecDataNotModifiable)
+	// ErrorInvalidOwnerEdit corresponds to errSecInvalidOwnerEdit result code
+	ErrorInvalidOwnerEdit = Error(C.errSecInvalidOwnerEdit)
+	// ErrorUserCanceled corresponds to errSecUserCanceled result code
+	ErrorUserCanceled = Error(C.errSecUserCanceled)
 )
 
 func checkError(errCode C.OSStatus) error {
@@ -79,6 +102,28 @@ func (k Error) Error() (msg string) {
 		msg = "The specified keychain could not be found."
 	case ErrorNoAccessForItem:
 		msg = "The specified item has no access control."
+	case ErrorReadOnly:
+		msg = "Read-only error."
+	case ErrorReadonlyAttribute:
+		msg = "The attribute is read-only."
+	case ErrorInvalidKeychain:
+		msg = "The keychain is not valid."
+	case ErrorDuplicateKeyChain:
+		msg = "A keychain with the same name already exists."
+	case ErrorWrongVersion:
+		msg = "The version is incorrect."
+	case ErrorInvalidItemRef:
+		msg = "The item reference is invalid."
+	case ErrorInvalidSearchRef:
+		msg = "The search reference is invalid."
+	case ErrorDataNotAvailable:
+		msg = "The data is not available."
+	case ErrorDataNotModifiable:
+		msg = "The data is not modifiable."
+	case ErrorInvalidOwnerEdit:
+		msg = "An invalid attempt to change the owner of an item."
+	case ErrorUserCanceled:
+		msg = "User canceled the operation."
 	default:
 		msg = "Keychain Error."
 	}
@@ -103,11 +148,13 @@ var (
 )
 
 // SecClassKey is the key type for SecClass
-var SecClassKey = attrKey(C.CFTypeRef(C.kSecClass))
-var secClassTypeRef = map[SecClass]C.CFTypeRef{
-	SecClassGenericPassword:  C.CFTypeRef(C.kSecClassGenericPassword),
-	SecClassInternetPassword: C.CFTypeRef(C.kSecClassInternetPassword),
-}
+var (
+	SecClassKey     = attrKey(C.CFTypeRef(C.kSecClass))
+	secClassTypeRef = map[SecClass]C.CFTypeRef{
+		SecClassGenericPassword:  C.CFTypeRef(C.kSecClassGenericPassword),
+		SecClassInternetPassword: C.CFTypeRef(C.kSecClassInternetPassword),
+	}
+)
 
 var (
 	// ServiceKey is for kSecAttrService
@@ -143,12 +190,14 @@ const (
 )
 
 // SynchronizableKey is the key type for Synchronizable
-var SynchronizableKey = attrKey(C.CFTypeRef(C.kSecAttrSynchronizable))
-var syncTypeRef = map[Synchronizable]C.CFTypeRef{
-	SynchronizableAny: C.CFTypeRef(C.kSecAttrSynchronizableAny),
-	SynchronizableYes: C.CFTypeRef(C.kCFBooleanTrue),
-	SynchronizableNo:  C.CFTypeRef(C.kCFBooleanFalse),
-}
+var (
+	SynchronizableKey = attrKey(C.CFTypeRef(C.kSecAttrSynchronizable))
+	syncTypeRef       = map[Synchronizable]C.CFTypeRef{
+		SynchronizableAny: C.CFTypeRef(C.kSecAttrSynchronizableAny),
+		SynchronizableYes: C.CFTypeRef(C.kCFBooleanTrue),
+		SynchronizableNo:  C.CFTypeRef(C.kCFBooleanFalse),
+	}
+)
 
 // Accessible is the items accessibility
 type Accessible int
@@ -185,11 +234,13 @@ const (
 )
 
 // MatchLimitKey is key type for MatchLimit
-var MatchLimitKey = attrKey(C.CFTypeRef(C.kSecMatchLimit))
-var matchTypeRef = map[MatchLimit]C.CFTypeRef{
-	MatchLimitOne: C.CFTypeRef(C.kSecMatchLimitOne),
-	MatchLimitAll: C.CFTypeRef(C.kSecMatchLimitAll),
-}
+var (
+	MatchLimitKey = attrKey(C.CFTypeRef(C.kSecMatchLimit))
+	matchTypeRef  = map[MatchLimit]C.CFTypeRef{
+		MatchLimitOne: C.CFTypeRef(C.kSecMatchLimitOne),
+		MatchLimitAll: C.CFTypeRef(C.kSecMatchLimitAll),
+	}
+)
 
 // ReturnAttributesKey is key type for kSecReturnAttributes
 var ReturnAttributesKey = attrKey(C.CFTypeRef(C.kSecReturnAttributes))
