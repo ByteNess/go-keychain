@@ -42,11 +42,14 @@ func GenericPasswordTest(t Test, service string, accessGroup string) {
 	item2 := keychain.NewGenericPassword(service, account2, "", []byte("toomanysecrets2"), accessGroup)
 
 	// Cleanup
-	defer keychain.DeleteItem(item)
-	defer keychain.DeleteItem(item2)
+	defer func() { _ = keychain.DeleteItem(item) }()
+	defer func() { _ = keychain.DeleteItem(item2) }()
 
 	// Test account names empty
 	accounts, err := keychain.GetGenericPasswordAccounts(service)
+	if err != nil {
+		t.Fail(err.Error())
+	}
 	if len(accounts) != 0 {
 		t.Fail("Should have no accounts")
 	}
@@ -151,7 +154,9 @@ func GenericPasswordTest(t Test, service string, accessGroup string) {
 	query3.SetMatchLimit(keychain.MatchLimitAll)
 	query3.SetReturnAttributes(true)
 	results3, err := keychain.QueryItem(query3)
-
+	if err != nil {
+		t.Fail(err.Error())
+	}
 	if len(results3) != 0 {
 		t.Fail("Results should have been empty")
 	}
