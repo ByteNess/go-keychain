@@ -4,7 +4,7 @@ package keychain
 
 /*
 #cgo LDFLAGS: -framework CoreFoundation -framework Security
-#cgo CFLAGS: -w
+#cgo CFLAGS: -Wno-deprecated-declarations
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <Security/Security.h>
