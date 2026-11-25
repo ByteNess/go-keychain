@@ -6,6 +6,8 @@ package keychain
 #cgo LDFLAGS: -framework CoreFoundation -framework Security
 #cgo CFLAGS: -Wno-deprecated-declarations
 
+#include <stdlib.h>
+#include <string.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <Security/Security.h>
 */
@@ -145,6 +147,12 @@ func NewKeychainWithPrompt(path string) (Keychain, error) {
 	return newKeychain(path, "", true)
 }
 
+// freeSecret zeroes n bytes of a C copy of a secret before freeing it.
+func freeSecret(p *C.char, n int) {
+	C.memset(unsafe.Pointer(p), 0, C.size_t(n))
+	C.free(unsafe.Pointer(p))
+}
+
 func newKeychain(path, password string, promptUser bool) (Keychain, error) {
 	pathRef := C.CString(path)
 	defer C.free(unsafe.Pointer(pathRef))
@@ -156,7 +164,7 @@ func newKeychain(path, password string, promptUser bool) (Keychain, error) {
 		errCode = C.SecKeychainCreate(pathRef, C.UInt32(0), nil, C.Boolean(1), 0, &kref) //nolint
 	} else {
 		passwordRef := C.CString(password)
-		defer C.free(unsafe.Pointer(passwordRef))
+		defer freeSecret(passwordRef, len(password))
 		errCode = C.SecKeychainCreate(pathRef, C.UInt32(len(password)), unsafe.Pointer(passwordRef), C.Boolean(0), 0, &kref) //nolint
 	}
 
@@ -228,7 +236,7 @@ func UnlockAtPath(path string, password string) error {
 	}
 	defer Release(C.CFTypeRef(kref))
 	passwordRef := C.CString(password)
-	defer C.free(unsafe.Pointer(passwordRef))
+	defer freeSecret(passwordRef, len(password))
 	return checkError(C.SecKeychainUnlock(kref, C.UInt32(len(password)), unsafe.Pointer(passwordRef), C.Boolean(1)))
 }
 
