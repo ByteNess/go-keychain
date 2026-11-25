@@ -1,0 +1,48 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+formatters:
+  enable:
+    - gofumpt
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+    - unparam
+    - gocritic
+    - revive
+    - gosec
+
+  settings:
+    gocritic:
+      disabled-checks:
+        - ifElseChain
+        - elseif
+
+    govet:
+      enable-all: true
+      disable:
+        - shadow
+        - fieldalignment
+
+  exclusions:
+    rules:
+      - linters:
+          - revive
+        text: "package-comments"
+
+      - linters:
+          - revive
+        text: "exported"
+
+      - linters:
+          - staticcheck
+        text: "ST1005"
