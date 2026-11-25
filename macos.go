@@ -1,4 +1,4 @@
-// +build darwin,!ios
+//go:build darwin && !ios
 
 package keychain
 
@@ -10,29 +10,30 @@ package keychain
 #include <Security/Security.h>
 */
 import "C"
+
 import (
 	"os"
 	"unsafe"
 )
 
 // AccessibleKey is key for kSecAttrAccessible
-var AccessibleKey = attrKey(C.CFTypeRef(C.kSecAttrAccessible))
-var accessibleTypeRef = map[Accessible]C.CFTypeRef{
-	AccessibleWhenUnlocked:                   C.CFTypeRef(C.kSecAttrAccessibleWhenUnlocked),
-	AccessibleAfterFirstUnlock:               C.CFTypeRef(C.kSecAttrAccessibleAfterFirstUnlock),
-	AccessibleAlways:                         C.CFTypeRef(C.kSecAttrAccessibleAlways),
-	AccessibleWhenUnlockedThisDeviceOnly:     C.CFTypeRef(C.kSecAttrAccessibleWhenUnlockedThisDeviceOnly),
-	AccessibleAfterFirstUnlockThisDeviceOnly: C.CFTypeRef(C.kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly),
-	AccessibleAccessibleAlwaysThisDeviceOnly: C.CFTypeRef(C.kSecAttrAccessibleAlwaysThisDeviceOnly),
-
-	// Only available in 10.10
-	//AccessibleWhenPasscodeSetThisDeviceOnly:  C.CFTypeRef(C.kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly),
-}
-
 var (
-	// AccessKey is key for kSecAttrAccess
-	AccessKey = attrKey(C.CFTypeRef(C.kSecAttrAccess))
+	AccessibleKey     = attrKey(C.CFTypeRef(C.kSecAttrAccessible))
+	accessibleTypeRef = map[Accessible]C.CFTypeRef{
+		AccessibleWhenUnlocked:                   C.CFTypeRef(C.kSecAttrAccessibleWhenUnlocked),
+		AccessibleAfterFirstUnlock:               C.CFTypeRef(C.kSecAttrAccessibleAfterFirstUnlock),
+		AccessibleAlways:                         C.CFTypeRef(C.kSecAttrAccessibleAlways),
+		AccessibleWhenUnlockedThisDeviceOnly:     C.CFTypeRef(C.kSecAttrAccessibleWhenUnlockedThisDeviceOnly),
+		AccessibleAfterFirstUnlockThisDeviceOnly: C.CFTypeRef(C.kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly),
+		AccessibleAccessibleAlwaysThisDeviceOnly: C.CFTypeRef(C.kSecAttrAccessibleAlwaysThisDeviceOnly),
+
+		// Only available in 10.10
+		// AccessibleWhenPasscodeSetThisDeviceOnly:  C.CFTypeRef(C.kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly),
+	}
 )
+
+// AccessKey is key for kSecAttrAccess
+var AccessKey = attrKey(C.CFTypeRef(C.kSecAttrAccess))
 
 // createAccess creates a SecAccessRef as CFTypeRef.
 // The returned SecAccessRef, if non-nil, must be released via CFRelease.
@@ -258,7 +259,7 @@ type keychainArray []Keychain
 // Convert the keychainArray to a CFTypeRef.
 // The returned CFTypeRef, if non-nil, must be released via CFRelease.
 func (ka keychainArray) Convert() (C.CFTypeRef, error) {
-	var refs = make([]C.CFTypeRef, len(ka))
+	refs := make([]C.CFTypeRef, len(ka))
 	var err error
 
 	for idx, kc := range ka {

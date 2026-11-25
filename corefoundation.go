@@ -1,4 +1,4 @@
-// +build darwin ios
+//go:build darwin || ios
 
 package keychain
 
@@ -32,6 +32,7 @@ static CFArrayRef CFArrayCreateSafe2(CFAllocatorRef allocator, const uintptr_t *
 }
 */
 import "C"
+
 import (
 	"errors"
 	"fmt"

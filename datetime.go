@@ -1,4 +1,4 @@
-// +build darwin ios
+//go:build darwin || ios
 
 package keychain
 
@@ -8,6 +8,7 @@ package keychain
 #include <CoreFoundation/CoreFoundation.h>
 */
 import "C"
+
 import (
 	"math"
 	"time"
