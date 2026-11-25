@@ -15,9 +15,6 @@ package keychain
 // file from go-kext, which means that any project that depends on this
 // package and go-kext would run into duplicate symbol errors otherwise.
 //
-// TODO: Move this file into its own package depended on by go-kext
-// and this package.
-//
 // The functions are also static, because this package is itself a fork of
 // keybase/go-keychain, which defines the same symbols. A binary that links
 // both (e.g. via azidentity/cache) would otherwise fail with duplicate
